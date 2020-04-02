@@ -1,13 +1,39 @@
-import React, { useState } from "react";
-//import Persons from "./components/Persons";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import Persons from "./components/Persons";
+import Filter from "./components/Filter";
+import AddForm from "./components/AddForm";
 
 const App = props => {
   //persons in the phonebook
-  const [persons, setPersons] = useState([{ name: "Arto Hellas" }]);
+  const [persons, setPersons] = useState([]);
   //for storing user submitted input
   const [newName, setNewName] = useState("");
 
   const [newNumber, setNewNumber] = useState("");
+
+  const [newFilter, setNewFilter] = useState("");
+
+  const [showAll, setShowAll] = useState(true);
+
+  useEffect(() => {
+    console.log("effect");
+    axios.get("http://localhost:3001/persons").then(response => {
+      console.log("promise fulfilled");
+      setPersons(response.data);
+    });
+  }, []);
+
+  const peopleToShow = showAll
+    ? persons
+    : persons.filter(person =>
+        person.name.toLowerCase().includes(newFilter.toLowerCase())
+      );
+
+  const handleFilter = event => {
+    setNewFilter(event.target.value);
+    setShowAll(false);
+  };
 
   // What is done as you type into input box
   const handleNewPerson = event => {
@@ -41,27 +67,19 @@ const App = props => {
   return (
     <div>
       <h2>Phonebook</h2>
-      <form onSubmit={addName}>
-        <div>
-          name:
-          <input value={newName} onChange={handleNewPerson} />
-        </div>
-        <div>
-          number: <input value={newNumber} onChange={handleNewNumber} />
-        </div>
-        <div>
-          <button type='submit'>add</button>
-        </div>
-      </form>
-      {/* <div>debugg: {newName}</div> */}
+
+      <Filter newFilter={newFilter} handleFilter={handleFilter} />
+
+      <AddForm
+        newName={newName}
+        addName={addName}
+        newNumber={newNumber}
+        handleNewNumber={handleNewNumber}
+        handleNewPerson={handleNewPerson}
+      />
+
       <h2>Numbers</h2>
-      <ul>
-        {persons.map((person, i) => (
-          <li key={i}>
-            {person.name}: {person.number}
-          </li>
-        ))}
-      </ul>
+      <Persons peopleToShow={peopleToShow} />
     </div>
   );
 };
